@@ -122,15 +122,17 @@ def run(protocol: protocol_api.ProtocolContext):
     )
     buffer_well = trough.wells_by_name()["A1"]
     enzyme_well = trough.wells_by_name()["B1"]
-    comp_cells = [trough.wells()[i] for i in (3, 7, 11, 15, 19)]  # D1–D5
+    # Competent cell tubes at positions D1–D5 (indices 3, 7, 11, 15, 19)
+    comp_cells = []
+    for idx in (3, 7, 11, 15, 19):
+        comp_cells.append(trough.wells()[idx])
 
     fixed_plate = protocol.load_labware("biorad_96_wellplate_200ul_pcr", "C2", "Fixed DNA")
     agar_plate = protocol.load_labware("corning_6_wellplate_16.8ml_flat", "C1", "Agar Plate")
 
-    assembly_well = {
-        asm.name: reaction_plate.wells()[i]
-        for i, asm in enumerate(inputs.assemblies)
-    }
+    assembly_well = {}
+    for i, asm in enumerate(inputs.assemblies):
+        assembly_well[asm.name] = reaction_plate.wells()[i]
 
     total_buffer = VOLUME_WATER_BUFFER * num_rxns
     total_enzyme = VOLUME_ENZYME * num_rxns
@@ -206,9 +208,12 @@ def run(protocol: protocol_api.ProtocolContext):
             protocol.pause(f"Replace agar plate (now {i // 6 + 1}/{num_agar}).")
         p50.pick_up_tip()
         p50.mix(3, VOLUME_COMPETENT, reaction_plate.wells()[i].bottom(z=2))
+        spiral_dests = []
+        for pt in SPIRAL:
+            spiral_dests.append(agar_plate.wells()[idx].bottom(z=0).move(pt))
         p50.distribute(
             2.5, reaction_plate.wells()[i].bottom(z=2),
-            [agar_plate.wells()[idx].bottom(z=0).move(pt) for pt in SPIRAL],
+            spiral_dests,
             disposal_volume=1.5, new_tip="never",
         )
         p50.blow_out(trash)

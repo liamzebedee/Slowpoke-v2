@@ -49,14 +49,17 @@ def parse_assemblies(csv: CsvGrid) -> list[Assembly]:
 
     Example row: pTDH3-sfGFP, pTDH3, sfGFP, tTDH1, pWS064
     """
-    return [
-        Assembly(
-            name=Plasmid(row[0].strip()),
-            parts=[Part(c.strip()) for c in row[1:] if c.strip()],
-        )
-        for row in csv
-        if row and row[0].strip()
-    ]
+    assemblies: list[Assembly] = []
+    for row in csv:
+        if not row or not row[0].strip():
+            continue
+        parts: list[Part] = []
+        for cell in row[1:]:
+            name = cell.strip()
+            if name:
+                parts.append(Part(name))
+        assemblies.append(Assembly(name=Plasmid(row[0].strip()), parts=parts))
+    return assemblies
 
 
 def parse_pcr_reactions(csv: CsvGrid) -> list[PcrReaction]:
@@ -68,7 +71,9 @@ def parse_pcr_reactions(csv: CsvGrid) -> list[PcrReaction]:
     for row in csv:
         if not row or not row[0].strip():
             continue
-        cells = [c.strip() for c in row]
+        cells = []
+        for c in row:
+            cells.append(c.strip())
         reactions.append(
             PcrReaction(
                 name=Reaction(cells[0]),

@@ -113,10 +113,9 @@ def run(protocol: protocol_api.ProtocolContext):
     )
     agar_plate = protocol.load_labware("corning_6_wellplate_16.8ml_flat", "5", "Agar Plate")
 
-    assembly_well = {
-        asm.name: reaction_plate.wells()[i]
-        for i, asm in enumerate(inputs.assemblies)
-    }
+    assembly_well = {}
+    for i, asm in enumerate(inputs.assemblies):
+        assembly_well[asm.name] = reaction_plate.wells()[i]
 
     # ── Step 1: Buffer + water (volume varies by part count) ─────────────
     p10.pick_up_tip()
@@ -133,7 +132,9 @@ def run(protocol: protocol_api.ProtocolContext):
     # ── Step 2: DNA parts (one tip per part, batched across assemblies) ──
     for part, asm_names in parts_index.items():
         source = find_dna_well(part, inputs, fixed_plate, custom_plate)
-        dest_wells = [assembly_well[n] for n in asm_names]
+        dest_wells = []
+        for n in asm_names:
+            dest_wells.append(assembly_well[n])
         p10.pick_up_tip()
         while dest_wells:
             batch = dest_wells[:10]
@@ -196,9 +197,12 @@ def run(protocol: protocol_api.ProtocolContext):
             protocol.pause("Replace with a new agar plate.")
         p300.pick_up_tip()
         p300.mix(1, 25, reaction_plate.wells()[i].bottom(z=0.5))
+        spiral_dests = []
+        for pt in SPIRAL:
+            spiral_dests.append(agar_plate.wells()[well_idx].bottom(z=6).move(pt))
         p300.distribute(
             4.5, reaction_plate.wells()[i].bottom(z=0.5),
-            [agar_plate.wells()[well_idx].bottom(z=6).move(pt) for pt in SPIRAL],
+            spiral_dests,
             disposal_volume=1.5, new_tip="never",
         )
         p300.blow_out()

@@ -22,7 +22,7 @@ Three user-provided CSV files define each run:
 """
 
 from dataclasses import dataclass
-from typing import NewType
+from typing import Generic, NewType, TypeVar
 
 
 # ── Scalar types ────────────────────────────────────────────────────────────
@@ -48,10 +48,17 @@ Reaction = NewType("Reaction", str)
 
 # ── Physical layout ─────────────────────────────────────────────────────────
 
+T = TypeVar("T")
+
 
 @dataclass
-class LabwareLayout:
-    """Maps item names to well positions on a plate or tube rack.
+class LabwareLayout(Generic[T]):
+    """Maps items to well positions on a plate or tube rack.
+
+    The type parameter T says what kind of items live on this labware:
+        LabwareLayout[Part]    — DNA parts on a 96-well toolkit plate
+        LabwareLayout[Reagent] — reagent tubes on a 24-tube rack
+        LabwareLayout[Colony]  — colony templates on a 96-well plate
 
     Built from a CSV grid where cell position determines the well address:
         row 0 col 0 → A1,  row 0 col 1 → A2,  ...
@@ -60,18 +67,16 @@ class LabwareLayout:
     Example CSV (24-tube rack, 4 rows × 6 cols):
         Water,    primer_1, primer_5
         Green_Taq,primer_2, primer_6
-        Phire,    primer_3, primer_7
-        buffer,   primer_4, primer_8
 
-    Produces: {"Water": "A1", "primer_1": "A2", "Green_Taq": "B1", ...}
+    Produces: LabwareLayout[Reagent]({"Water": "A1", "primer_1": "A2", ...})
     """
 
-    positions: dict[str, Well]
+    positions: dict[T, Well]
 
-    def __getitem__(self, name: str) -> Well:
+    def __getitem__(self, name: T) -> Well:
         return self.positions[name]
 
-    def __contains__(self, name: str) -> bool:
+    def __contains__(self, name: T) -> bool:
         return name in self.positions
 
 
@@ -104,8 +109,8 @@ class CloningInputs:
     assemblies   — which parts to combine into which plasmids
     """
 
-    fixed_parts: LabwareLayout
-    custom_parts: LabwareLayout
+    fixed_parts: LabwareLayout[Part]
+    custom_parts: LabwareLayout[Part]
     assemblies: list[Assembly]
 
     def parts_to_assemblies(self) -> dict[Part, list[Plasmid]]:
@@ -128,8 +133,8 @@ class CloningInputs:
 class ReagentSet:
     """The four reagent tubes needed for one PCR reaction.
 
-    Each field is the NAME of a tube on the reagent rack.
-    The name maps to a physical well position via the LabwareLayout.
+    Each field is a Reagent — the identity of a tube on the reagent rack.
+    The Reagent maps to a physical Well via a LabwareLayout[Reagent].
 
     Example: ReagentSet(water="Water", mastermix="Green_Taq",
                         fwd_primer="primer_1", rev_primer="primer_2")
@@ -162,7 +167,7 @@ class ReagentVolumes:
     rev_primer: float
 
     def pairs(self, reagents: ReagentSet) -> list[tuple[Reagent, float]]:
-        """Zip reagent names with their volumes for iteration.
+        """Zip reagent identities with their volumes for iteration.
 
         Returns: [("Water", 2.5), ("Green_Taq", 7.5), ("primer_1", 1.5), ("primer_2", 1.5)]
         """
@@ -215,8 +220,8 @@ class ColonyPcrInputs:
     primer_groups  — reactions grouped by shared primers (for master mix prep)
     """
 
-    reagent_rack: LabwareLayout
-    colony_plate: LabwareLayout
+    reagent_rack: LabwareLayout[Reagent]
+    colony_plate: LabwareLayout[Colony]
     reactions: list[PcrReaction]
     primer_groups: list[PrimerGroup]
 

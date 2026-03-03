@@ -109,12 +109,15 @@ def run(protocol: protocol_api.ProtocolContext):
             p300.drop_tip()
 
         # Mix and distribute to reaction wells
+        dest_wells = []
+        for n in group.reaction_names:
+            dest_wells.append(rxn_well(n))
         p300.pick_up_tip()
         p300.mix(2, 2 * (n_samples + 4), mix_rack.wells()[mix_idx].bottom(z=1))
         p300.distribute(
             REACTION_VOLUME - VOLUME_COLONY,
             mix_rack.wells()[mix_idx].bottom(z=1),
-            [rxn_well(n) for n in group.reaction_names],
+            dest_wells,
             disposal_volume=5, new_tip="never",
         )
         p300.drop_tip()
@@ -123,10 +126,13 @@ def run(protocol: protocol_api.ProtocolContext):
     colonies_index = inputs.colonies_to_reactions()
     for colony, rxn_names in colonies_index.items():
         source = colony_plate.wells_by_name()[inputs.colony_plate[colony]]
+        dest_wells = []
+        for n in rxn_names:
+            dest_wells.append(rxn_well(n))
         p10.pick_up_tip()
         p10.distribute(
             VOLUME_COLONY, source.bottom(z=1),
-            [rxn_well(n) for n in rxn_names],
+            dest_wells,
             disposal_volume=1.5, new_tip="never",
         )
         p10.drop_tip()

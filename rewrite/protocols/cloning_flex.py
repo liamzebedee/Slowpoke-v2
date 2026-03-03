@@ -102,10 +102,9 @@ def run(protocol: protocol_api.ProtocolContext):
     )
     agar_plate = protocol.load_labware("corning_6_wellplate_16.8ml_flat", "C1", "Agar Plate")
 
-    assembly_well = {
-        asm.name: reaction_plate.wells()[i]
-        for i, asm in enumerate(inputs.assemblies)
-    }
+    assembly_well = {}
+    for i, asm in enumerate(inputs.assemblies):
+        assembly_well[asm.name] = reaction_plate.wells()[i]
 
     protocol.pause("Temperature modules ready!")
 
@@ -173,9 +172,12 @@ def run(protocol: protocol_api.ProtocolContext):
             protocol.pause("Replace with a new agar plate.")
         p50.pick_up_tip()
         p50.mix(3, VOLUME_COMPETENT, reaction_plate.wells()[i].bottom(z=2))
+        spiral_dests = []
+        for pt in SPIRAL:
+            spiral_dests.append(agar_plate.wells()[well_idx].bottom(z=0).move(pt))
         p50.distribute(
             2.5, reaction_plate.wells()[i].bottom(z=2),
-            [agar_plate.wells()[well_idx].bottom(z=0).move(pt) for pt in SPIRAL],
+            spiral_dests,
             disposal_volume=1.5, new_tip="never",
         )
         p50.blow_out(trash)

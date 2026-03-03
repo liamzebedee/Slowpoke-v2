@@ -108,11 +108,14 @@ def run(protocol: protocol_api.ProtocolContext):
     p50.drop_tip()
 
     # ── Step 2: Distribute to reaction wells ─────────────────────────────
+    dest_wells = []
+    for rxn in inputs.reactions:
+        dest_wells.append(rxn_well(rxn.name))
     p50.pick_up_tip()
     p50.distribute(
         REACTION_VOLUME - VOLUME_COLONY,
         mix_rack.wells()[0].bottom(z=1),
-        [rxn_well(rxn.name) for rxn in inputs.reactions],
+        dest_wells,
         disposal_volume=2, new_tip="never",
     )
     p50.drop_tip()

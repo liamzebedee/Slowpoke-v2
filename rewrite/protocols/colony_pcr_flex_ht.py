@@ -123,7 +123,9 @@ def run(protocol: protocol_api.ProtocolContext):
         p50.drop_tip()
 
         # Distribute in batches sized to pipette capacity
-        dest_wells = [rxn_well(n) for n in group.reaction_names]
+        dest_wells = []
+        for n in group.reaction_names:
+            dest_wells.append(rxn_well(n))
         p50.configure_for_volume(MIX_PER_RXN)
         batch_size = max(1, 3 * (50 // MIX_PER_RXN))
         for start in range(0, len(dest_wells), batch_size):
