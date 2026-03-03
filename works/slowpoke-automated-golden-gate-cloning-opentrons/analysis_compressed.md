@@ -1,0 +1,22 @@
+# Slowpoke — Core Ideas (Compressed)
+
+- **Slowpoke** is an open-source tool automating Golden Gate Assembly-based DNA cloning on low-cost Opentrons OT-2 and Flex liquid-handling robots
+- Addresses the gap between expensive biofoundry automation and tedious manual cloning in synthetic biology labs
+- **Two workflows:** (1) Golden Gate cloning (assembly + transformation + plating), (2) Colony PCR screening
+- **Two interfaces:** offline CLI Python script and a free no-code Streamlit web GUI (https://slowpoke.streamlit.app/)
+- Users supply CSV files defining genetic parts and assembly combinations; the tool auto-generates ready-to-run Opentrons protocols
+- No external Python packages needed — uses only standard libraries + Opentrons API
+- Compatible with multiple MoClo/Golden Gate toolkits — validated with Yeast Toolkit (YTK) and SubtiToolKit (STK)
+- **Validation results:**
+  - 3-part YTK on OT-2: 17/17 correct colonies (100%)
+  - 5-part STK on OT-2: ~60% correct (comparable to manual)
+  - 3-part YTK on Flex: 11/12 correct (~92%)
+  - 62-assembly high-throughput on Flex (6-part): 96% success (55/57, excluding toxic constructs)
+  - 100% Sanger sequencing accuracy on 22 verified plasmids
+- **Efficiency:** 62 assemblies completed in <4 days, ~18 min user time per assembly, €12.9 per construct
+- Scales to 96 simultaneous Golden Gate reactions and 288 parallel colony PCRs
+- Named after the Pokemon character — reflects design philosophy of being approachable, calm, and user-friendly
+- **Limitations:** colony picking still manual; some manual steps remain (plate sealing, tube transfers); toxic gene products can cause failures
+- **Extensible** to other assembly methods (Gibson, in vivo recombination) and integrates with InSillyClo for large-scale cloning map design
+- Could combine with open-source colony pickers for fully automated end-to-end pipeline
+- Code available at https://github.com/Tom-Ellis-Lab/Slowpoke
